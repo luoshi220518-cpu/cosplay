@@ -27,6 +27,7 @@ const UserProfile = ({ onSubmit }) => {
     if (imageData) {
       // 保存到本地存储
       imageService.saveUserAvatar('current_user', imageData);
+      console.log('用户头像已更新');
     }
   };
 

@@ -36,7 +36,20 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
     // 加载聊天背景
     const background = imageService.getChatBackground(character.id);
     setChatBackground(background);
-  }, [character.id]);
+    
+    // 应用背景图到聊天界面
+    if (background && background !== imageService.getDefaultImage('chatBackground')) {
+      const chatInterface = document.querySelector('.chat-interface');
+      if (chatInterface) {
+        chatInterface.style.setProperty('--chat-background', `url(${background})`);
+      }
+    } else {
+      const chatInterface = document.querySelector('.chat-interface');
+      if (chatInterface) {
+        chatInterface.style.setProperty('--chat-background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)');
+      }
+    }
+  }, [character.id, chatBackground]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -108,6 +121,18 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
     setChatBackground(imageData);
     if (imageData) {
       imageService.saveChatBackground(character.id, imageData);
+      // 立即应用背景图
+      const chatInterface = document.querySelector('.chat-interface');
+      if (chatInterface) {
+        chatInterface.style.setProperty('--chat-background', `url(${imageData})`);
+      }
+    } else {
+      // 清除背景图，使用默认背景
+      imageService.deleteImage(`background_${character.id}`);
+      const chatInterface = document.querySelector('.chat-interface');
+      if (chatInterface) {
+        chatInterface.style.setProperty('--chat-background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)');
+      }
     }
   };
 
@@ -120,8 +145,10 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
         </button>
         
         <div className="character-info">
-          <span className="character-avatar">{character.avatar}</span>
-          <div>
+          <div className="character-avatar">
+            <span className="character-emoji-large">{character.avatar}</span>
+          </div>
+          <div className="character-details">
             <h3>{character.name}</h3>
             <p>正在与 {userName} 对话</p>
           </div>
@@ -168,15 +195,7 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
             <div className="message-content">
               {message.type === 'character' && (
                 <div className="message-avatar">
-                  <img 
-                    src={imageService.getCharacterAvatar(character.id)} 
-                    alt={character.name}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'inline';
-                    }}
-                  />
-                  <span style={{display: 'none'}}>{character.avatar}</span>
+                  <span className="character-emoji">{character.avatar}</span>
                 </div>
               )}
               {message.type === 'user' && userAvatar && (
@@ -251,13 +270,44 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
               </button>
             </div>
             <div className="background-settings-body">
-              <ImageUpload
-                currentImage={chatBackground}
-                onImageChange={handleBackgroundChange}
-                type="background"
-                size="large"
-                showPreview={true}
-              />
+              <div className="background-preview">
+                <h4>当前背景预览</h4>
+                <div 
+                  className="preview-container"
+                  style={{
+                    background: chatBackground && chatBackground !== imageService.getDefaultImage('chatBackground') 
+                      ? `url(${chatBackground})` 
+                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                  }}
+                >
+                  <div className="preview-overlay">
+                    <p>聊天界面背景预览</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="background-upload">
+                <h4>上传新背景</h4>
+                <ImageUpload
+                  currentImage={chatBackground}
+                  onImageChange={handleBackgroundChange}
+                  type="background"
+                  size="large"
+                  showPreview={true}
+                />
+                
+                {chatBackground && chatBackground !== imageService.getDefaultImage('chatBackground') && (
+                  <button 
+                    className="clear-background-btn"
+                    onClick={() => handleBackgroundChange(null)}
+                  >
+                    清除背景图
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

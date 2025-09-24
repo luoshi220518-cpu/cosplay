@@ -1,0 +1,231 @@
+.image-cropper {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.cropper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.cropper-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.cropper-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cancel-btn,
+.confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.confirm-btn {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+}
+
+.confirm-btn:hover {
+  background: white;
+  transform: translateY(-1px);
+}
+
+.cropper-body {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
+.cropper-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.crop-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  user-select: none;
+  cursor: move;
+  transition: transform 0.1s ease;
+  object-fit: cover;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.crop-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  border: 3px solid #667eea;
+  background: transparent;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+}
+
+.crop-frame.rect {
+  border-radius: 0;
+}
+
+.crop-frame.circle {
+  border-radius: 50%;
+}
+
+.crop-frame::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px dashed rgba(255, 255, 255, 0.8);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+
+.cropper-controls {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e1e5e9;
+}
+
+.zoom-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.zoom-control label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.zoom-control input[type="range"] {
+  width: 150px;
+  height: 4px;
+  border-radius: 2px;
+  background: #ddd;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.zoom-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-control span {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+  min-width: 30px;
+  text-align: center;
+}
+
+.cropper-footer {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e1e5e9;
+  text-align: center;
+}
+
+.cropper-footer p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .image-cropper {
+    max-width: 100%;
+    margin: 0.5rem;
+  }
+  
+  .cropper-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .cropper-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .cropper-body {
+    padding: 1rem;
+  }
+  
+  .cropper-container {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .cropper-controls {
+    padding: 1rem;
+  }
+  
+  .zoom-control input[type="range"] {
+    width: 120px;
+  }
+}

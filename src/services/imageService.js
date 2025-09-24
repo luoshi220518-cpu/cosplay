@@ -56,6 +56,54 @@ class ImageService {
     });
   }
 
+  // 从base64压缩图片
+  compressImageFromBase64(base64Data, type = 'general') {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        // 根据类型设置不同的压缩参数
+        let maxWidth = 800;
+        let quality = 0.8;
+        
+        switch (type) {
+          case 'avatar':
+            maxWidth = 200;
+            quality = 0.9;
+            break;
+          case 'background':
+            maxWidth = 1200;
+            quality = 0.7;
+            break;
+          default:
+            maxWidth = 800;
+            quality = 0.8;
+        }
+
+        // 计算新尺寸
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // 绘制压缩后的图片
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // 转换为base64
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+
+      img.src = base64Data;
+    });
+  }
+
   // 上传图片（转换为base64）
   async uploadImage(file, type = 'general') {
     try {

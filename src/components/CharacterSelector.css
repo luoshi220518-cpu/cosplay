@@ -127,27 +127,17 @@
   position: relative;
 }
 
-.character-avatar img {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-  border: 3px solid rgba(255, 255, 255, 0.8);
-}
-
 .avatar-emoji {
-  font-size: 3rem;
-  display: inline-block;
-  padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-  width: 80px;
-  height: 80px;
+  font-size: 4rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  width: 100px;
+  height: 100px;
+  border: 3px solid rgba(255, 255, 255, 0.8);
 }
 
 .character-basic-info {

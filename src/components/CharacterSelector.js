@@ -45,15 +45,7 @@ const CharacterSelector = ({ characters, onSelect, userName, onEditCharacter }) 
           >
             <div className="character-header">
               <div className="character-avatar">
-                <img 
-                  src={imageService.getCharacterAvatar(character.id)} 
-                  alt={character.name}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'inline';
-                  }}
-                />
-                <span className="avatar-emoji" style={{display: 'none'}}>{character.avatar}</span>
+                <span className="avatar-emoji">{character.avatar}</span>
               </div>
               
               <div className="character-basic-info">

@@ -49,6 +49,7 @@ const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
     // 保存角色头像
     if (characterAvatar) {
       imageService.saveCharacterAvatar(editedCharacter.id, characterAvatar);
+      console.log('角色头像已保存');
     }
     onClose();
   };
@@ -61,6 +62,7 @@ const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
 
   const handleAvatarChange = (imageData) => {
     setCharacterAvatar(imageData);
+    console.log('角色头像已更新');
   };
 
   if (!isOpen || !character) return null;
