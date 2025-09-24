@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, MessageCircle, Edit3 } from 'lucide-react';
 import './CharacterSelector.css';
+import imageService from '../services/imageService';
 
 const CharacterSelector = ({ characters, onSelect, userName, onEditCharacter }) => {
   const [selectedId, setSelectedId] = useState(null);
@@ -44,7 +45,15 @@ const CharacterSelector = ({ characters, onSelect, userName, onEditCharacter }) 
           >
             <div className="character-header">
               <div className="character-avatar">
-                <span className="avatar-emoji">{character.avatar}</span>
+                <img 
+                  src={imageService.getCharacterAvatar(character.id)} 
+                  alt={character.name}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'inline';
+                  }}
+                />
+                <span className="avatar-emoji" style={{display: 'none'}}>{character.avatar}</span>
               </div>
               
               <div className="character-basic-info">

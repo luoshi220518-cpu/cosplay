@@ -108,6 +108,12 @@
   min-height: 80px;
 }
 
+.avatar-upload-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
 .skills-container {
   border: 2px solid #e1e5e9;
   border-radius: 8px;

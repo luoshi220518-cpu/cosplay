@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, RotateCcw } from 'lucide-react';
 import './CharacterEditModal.css';
+import ImageUpload from './ImageUpload';
+import imageService from '../services/imageService';
 
 const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
   const [editedCharacter, setEditedCharacter] = useState({});
   const [newSkill, setNewSkill] = useState('');
+  const [characterAvatar, setCharacterAvatar] = useState(null);
 
   useEffect(() => {
     if (character) {
       setEditedCharacter({ ...character });
+      // 加载角色头像
+      const avatar = imageService.getCharacterAvatar(character.id);
+      setCharacterAvatar(avatar);
     }
   }, [character]);
 
@@ -40,11 +46,21 @@ const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
     if (onSave) {
       onSave(editedCharacter);
     }
+    // 保存角色头像
+    if (characterAvatar) {
+      imageService.saveCharacterAvatar(editedCharacter.id, characterAvatar);
+    }
     onClose();
   };
 
   const handleReset = () => {
     setEditedCharacter({ ...character });
+    const avatar = imageService.getCharacterAvatar(character.id);
+    setCharacterAvatar(avatar);
+  };
+
+  const handleAvatarChange = (imageData) => {
+    setCharacterAvatar(imageData);
   };
 
   if (!isOpen || !character) return null;
@@ -60,6 +76,19 @@ const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
         </div>
 
         <div className="modal-body">
+          <div className="form-section">
+            <label>角色头像</label>
+            <div className="avatar-upload-section">
+              <ImageUpload
+                currentImage={characterAvatar}
+                onImageChange={handleAvatarChange}
+                type="avatar"
+                size="medium"
+                className="avatar"
+              />
+            </div>
+          </div>
+
           <div className="form-section">
             <label>角色名称</label>
             <input

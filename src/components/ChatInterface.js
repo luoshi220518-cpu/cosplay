@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Settings, Image } from 'lucide-react';
 import './ChatInterface.css';
+import aiService from '../services/aiService';
+import ApiSettings from './ApiSettings';
+import ImageUpload from './ImageUpload';
+import imageService from '../services/imageService';
 
-const ChatInterface = ({ character, userName, onBack }) => {
+const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -14,6 +18,10 @@ const ChatInterface = ({ character, userName, onBack }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showApiSettings, setShowApiSettings] = useState(false);
+  const [showBackgroundSettings, setShowBackgroundSettings] = useState(false);
+  const [chatBackground, setChatBackground] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -24,64 +32,67 @@ const ChatInterface = ({ character, userName, onBack }) => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim()) return;
+  useEffect(() => {
+    // 加载聊天背景
+    const background = imageService.getChatBackground(character.id);
+    setChatBackground(background);
+  }, [character.id]);
 
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputMessage.trim() || isLoading) return;
+
+    const userMessage = inputMessage.trim();
     const newMessage = {
       id: messages.length + 1,
       type: 'user',
-      content: inputMessage,
+      content: userMessage,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, newMessage]);
     setInputMessage('');
+    setIsLoading(true);
 
-    // 模拟AI回复
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(inputMessage, character);
+    try {
+      // 构建对话历史
+      const conversationHistory = messages.map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+
+      // 调用AI服务
+      const aiResponse = await aiService.generateResponse(
+        character, 
+        userMessage, 
+        conversationHistory
+      );
+
       const responseMessage = {
         id: messages.length + 2,
         type: 'character',
         content: aiResponse,
         timestamp: new Date()
       };
+
       setMessages(prev => [...prev, responseMessage]);
-    }, 1000);
+    } catch (error) {
+      console.error('AI回复错误:', error);
+      
+      // 显示错误消息
+      const errorMessage = {
+        id: messages.length + 2,
+        type: 'character',
+        content: '抱歉，我现在无法回复你的消息。请稍后再试。',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const generateAIResponse = (userMessage, character) => {
-    const responses = {
-      '哈利·波特': [
-        "这让我想起了在霍格沃茨的时光...",
-        "你知道吗，我在一年级时就学会了魁地奇！",
-        "友谊和勇气是最重要的魔法。",
-        "有时候，我们需要相信自己的直觉。"
-      ],
-      '苏格拉底': [
-        "让我问你一个问题：什么是真正的智慧？",
-        "无知之知，这是智慧的开始。",
-        "通过对话，我们可以发现真理。",
-        "你认为什么是正义？"
-      ],
-      '夏洛克·福尔摩斯': [
-        "从你的话语中，我观察到了一些有趣的细节...",
-        "让我运用演绎法来分析这个问题。",
-        "数据！数据！数据！没有数据就无法推理。",
-        "排除所有不可能的情况，剩下的就是真相。"
-      ],
-      '达芬奇': [
-        "这让我想到了一个新的发明想法...",
-        "艺术和科学是相通的，都需要观察和创造。",
-        "好奇心是知识的源泉。",
-        "让我画个图来解释这个概念。"
-      ]
-    };
-
-    const characterResponses = responses[character.name] || ["这是一个很有趣的话题。"];
-    return characterResponses[Math.floor(Math.random() * characterResponses.length)];
-  };
 
   const handleVoiceToggle = () => {
     setIsRecording(!isRecording);
@@ -91,6 +102,13 @@ const ChatInterface = ({ character, userName, onBack }) => {
   const handleSpeakToggle = () => {
     setIsSpeaking(!isSpeaking);
     // 这里可以集成TTS功能
+  };
+
+  const handleBackgroundChange = (imageData) => {
+    setChatBackground(imageData);
+    if (imageData) {
+      imageService.saveChatBackground(character.id, imageData);
+    }
   };
 
   return (
@@ -110,6 +128,22 @@ const ChatInterface = ({ character, userName, onBack }) => {
         </div>
 
         <div className="voice-controls">
+          <button 
+            className="voice-btn"
+            onClick={() => setShowApiSettings(true)}
+            title="API设置"
+          >
+            <Settings size={20} />
+          </button>
+          
+          <button 
+            className="voice-btn"
+            onClick={() => setShowBackgroundSettings(true)}
+            title="背景设置"
+          >
+            <Image size={20} />
+          </button>
+          
           <button 
             className={`voice-btn ${isRecording ? 'recording' : ''}`}
             onClick={handleVoiceToggle}
@@ -133,7 +167,30 @@ const ChatInterface = ({ character, userName, onBack }) => {
           <div key={message.id} className={`message ${message.type}`}>
             <div className="message-content">
               {message.type === 'character' && (
-                <span className="message-avatar">{character.avatar}</span>
+                <div className="message-avatar">
+                  <img 
+                    src={imageService.getCharacterAvatar(character.id)} 
+                    alt={character.name}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'inline';
+                    }}
+                  />
+                  <span style={{display: 'none'}}>{character.avatar}</span>
+                </div>
+              )}
+              {message.type === 'user' && userAvatar && (
+                <div className="message-avatar">
+                  <img 
+                    src={userAvatar} 
+                    alt={userName}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'inline';
+                    }}
+                  />
+                  <span style={{display: 'none'}}>👤</span>
+                </div>
               )}
               <div className="message-bubble">
                 <p>{message.content}</p>
@@ -156,8 +213,8 @@ const ChatInterface = ({ character, userName, onBack }) => {
             placeholder={`与${character.name}对话...`}
             className="message-input"
           />
-          <button type="submit" className="send-btn" disabled={!inputMessage.trim()}>
-            <Send size={20} />
+          <button type="submit" className="send-btn" disabled={!inputMessage.trim() || isLoading}>
+            {isLoading ? <Loader2 size={20} className="spinning" /> : <Send size={20} />}
           </button>
         </div>
       </form>
@@ -172,6 +229,39 @@ const ChatInterface = ({ character, userName, onBack }) => {
           ))}
         </div>
       </div>
+
+      <ApiSettings
+        isOpen={showApiSettings}
+        onClose={() => setShowApiSettings(false)}
+        onSave={(settings) => {
+          // 这里可以保存API设置到本地存储
+          localStorage.setItem('aiApiSettings', JSON.stringify(settings));
+          aiService.setProvider(settings.provider);
+        }}
+      />
+
+      {/* 背景设置弹窗 */}
+      {showBackgroundSettings && (
+        <div className="background-settings-overlay" onClick={() => setShowBackgroundSettings(false)}>
+          <div className="background-settings-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="background-settings-header">
+              <h3>聊天背景设置</h3>
+              <button className="close-btn" onClick={() => setShowBackgroundSettings(false)}>
+                ×
+              </button>
+            </div>
+            <div className="background-settings-body">
+              <ImageUpload
+                currentImage={chatBackground}
+                onImageChange={handleBackgroundChange}
+                type="background"
+                size="large"
+                showPreview={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

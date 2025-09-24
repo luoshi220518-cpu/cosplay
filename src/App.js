@@ -9,6 +9,7 @@ import { characters } from './data/characters';
 function App() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [userName, setUserName] = useState('');
+  const [userAvatar, setUserAvatar] = useState(null);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [charactersList, setCharactersList] = useState(characters);
   const [editingCharacter, setEditingCharacter] = useState(null);
@@ -18,8 +19,9 @@ function App() {
     setSelectedCharacter(character);
   };
 
-  const handleUserNameSubmit = (name) => {
+  const handleUserNameSubmit = (name, avatar) => {
     setUserName(name);
+    setUserAvatar(avatar);
     setIsProfileComplete(true);
   };
 
@@ -64,12 +66,14 @@ function App() {
             characters={charactersList} 
             onSelect={handleCharacterSelect}
             userName={userName}
+            userAvatar={userAvatar}
             onEditCharacter={handleEditCharacter}
           />
         ) : (
           <ChatInterface 
             character={selectedCharacter}
             userName={userName}
+            userAvatar={userAvatar}
             onBack={handleBackToSelection}
           />
         )}

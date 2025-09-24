@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, ArrowRight } from 'lucide-react';
 import './UserProfile.css';
+import ImageUpload from './ImageUpload';
+import imageService from '../services/imageService';
 
 const UserProfile = ({ onSubmit }) => {
   const [userName, setUserName] = useState('');
   const [isValid, setIsValid] = useState(false);
+  const [userAvatar, setUserAvatar] = useState(null);
 
   const handleInputChange = (e) => {
     const name = e.target.value.trim();
@@ -15,15 +18,29 @@ const UserProfile = ({ onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isValid) {
-      onSubmit(userName);
+      onSubmit(userName, userAvatar);
+    }
+  };
+
+  const handleAvatarChange = (imageData) => {
+    setUserAvatar(imageData);
+    if (imageData) {
+      // 保存到本地存储
+      imageService.saveUserAvatar('current_user', imageData);
     }
   };
 
   return (
     <div className="user-profile">
       <div className="profile-card">
-        <div className="profile-icon">
-          <User size={48} />
+        <div className="profile-avatar-section">
+          <ImageUpload
+            currentImage={userAvatar}
+            onImageChange={handleAvatarChange}
+            type="avatar"
+            size="large"
+            className="avatar"
+          />
         </div>
         
         <h2>欢迎来到AI角色扮演世界</h2>
