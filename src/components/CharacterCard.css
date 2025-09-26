@@ -1,0 +1,105 @@
+.character-card {
+  border: 2px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 28%;
+  min-width: 280px;
+  max-width: 350px;
+  flex-shrink: 0;
+  background-color: white;
+}
+
+.character-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.character-card.selected {
+  border-color: #667eea;
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+  background-color: rgba(102, 126, 234, 0.05);
+}
+
+.character-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.character-avatar {
+  font-size: 3rem;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.character-basic-info {
+  flex: 1;
+}
+
+.character-name {
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.character-description {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.character-details {
+  margin-bottom: 1rem;
+}
+
+.character-personality {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.character-skills {
+  font-size: 0.9rem;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.skill-tag {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.action-buttons {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.start-chat-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.edit-character-btn {
+  background: #f5f7fa;
+  color: #333;
+  border: 1px solid #e1e5e9;
+}

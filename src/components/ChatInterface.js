@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Settings, Image } from 'lucide-react';
+import { ArrowLeft, Send, Mic, MicOff, Volume2, VolumeX, Loader2, Settings, Image, X } from 'lucide-react';
 import './ChatInterface.css';
 import aiService from '../services/aiService';
 import ApiSettings from './ApiSettings';
 import ImageUpload from './ImageUpload';
+import ImageCropper from './ImageCropper';
 import imageService from '../services/imageService';
 
 const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
@@ -21,8 +22,13 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showApiSettings, setShowApiSettings] = useState(false);
   const [showBackgroundSettings, setShowBackgroundSettings] = useState(false);
+  const [showBackgroundCropper, setShowBackgroundCropper] = useState(false);
+  const [backgroundImageToCrop, setBackgroundImageToCrop] = useState(null);
   const [chatBackground, setChatBackground] = useState(null);
+  const [characterAvatar, setCharacterAvatar] = useState(null);
+  const [containerAspectRatio, setContainerAspectRatio] = useState(1.25);
   const messagesEndRef = useRef(null);
+  const chatInterfaceRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -32,10 +38,32 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
     scrollToBottom();
   }, [messages]);
 
+  // 计算容器实际比例
+  useEffect(() => {
+    const calculateAspectRatio = () => {
+      if (chatInterfaceRef.current) {
+        const rect = chatInterfaceRef.current.getBoundingClientRect();
+        const aspectRatio = rect.width / rect.height;
+        setContainerAspectRatio(aspectRatio);
+      }
+    };
+
+    calculateAspectRatio();
+    window.addEventListener('resize', calculateAspectRatio);
+    
+    return () => window.removeEventListener('resize', calculateAspectRatio);
+  }, []);
+
   useEffect(() => {
     // 加载聊天背景
     const background = imageService.getChatBackground(character.id);
     setChatBackground(background);
+    
+    // 加载角色头像
+    const avatar = imageService.getCharacterAvatar(character.id);
+    if (avatar) {
+      setCharacterAvatar(avatar);
+    }
     
     // 应用背景图到聊天界面
     if (background && background !== imageService.getDefaultImage('chatBackground')) {
@@ -136,8 +164,37 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
     }
   };
 
+  const handleBackgroundCropComplete = (croppedImageData) => {
+    handleBackgroundChange(croppedImageData);
+    setShowBackgroundCropper(false);
+    setBackgroundImageToCrop(null);
+  };
+
+  const handleBackgroundCropCancel = () => {
+    setShowBackgroundCropper(false);
+    setBackgroundImageToCrop(null);
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      imageService.validateFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageData = e.target.result;
+        setBackgroundImageToCrop(imageData);
+        setShowBackgroundCropper(true);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
-    <div className="chat-interface">
+    <div className="chat-interface" ref={chatInterfaceRef}>
       <div className="chat-header">
         <button className="back-btn" onClick={onBack}>
           <ArrowLeft size={20} />
@@ -146,7 +203,29 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
         
         <div className="character-info">
           <div className="character-avatar">
-            <span className="character-emoji-large">{character.avatar}</span>
+            {characterAvatar ? (
+              <img
+                src={characterAvatar}
+                alt={character.name}
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid rgba(255, 255, 255, 0.3)'
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <span 
+              className="character-emoji-large" 
+              style={{ display: characterAvatar ? 'none' : 'flex' }}
+            >
+              {character.avatar}
+            </span>
           </div>
           <div className="character-details">
             <h3>{character.name}</h3>
@@ -195,20 +274,43 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
             <div className="message-content">
               {message.type === 'character' && (
                 <div className="message-avatar">
-                  <span className="character-emoji">{character.avatar}</span>
+                  {characterAvatar ? (
+                    <img
+                      src={characterAvatar}
+                      alt={character.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextSibling.style.display = 'inline';
+                      }}
+                    />
+                  ) : null}
+                  <span 
+                    className="character-emoji" 
+                    style={{ display: characterAvatar ? 'none' : 'inline' }}
+                  >
+                    {character.avatar}
+                  </span>
                 </div>
               )}
-              {message.type === 'user' && userAvatar && (
+              {message.type === 'user' && (
                 <div className="message-avatar">
-                  <img 
-                    src={userAvatar} 
-                    alt={userName}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'inline';
-                    }}
-                  />
-                  <span style={{display: 'none'}}>👤</span>
+                  {userAvatar ? (
+                    <img 
+                      src={userAvatar} 
+                      alt={userName}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'inline';
+                      }}
+                    />
+                  ) : null}
+                  <span style={{display: userAvatar ? 'none' : 'inline'}}>👤</span>
                 </div>
               )}
               <div className="message-bubble">
@@ -255,7 +357,9 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
         onSave={(settings) => {
           // 这里可以保存API设置到本地存储
           localStorage.setItem('aiApiSettings', JSON.stringify(settings));
-          aiService.setProvider(settings.provider);
+          // 传递提供商和对应的配置
+          const providerConfig = settings[settings.provider];
+          aiService.setProvider(settings.provider, providerConfig);
         }}
       />
 
@@ -270,45 +374,76 @@ const ChatInterface = ({ character, userName, userAvatar, onBack }) => {
               </button>
             </div>
             <div className="background-settings-body">
-              <div className="background-preview">
-                <h4>当前背景预览</h4>
-                <div 
-                  className="preview-container"
-                  style={{
-                    background: chatBackground && chatBackground !== imageService.getDefaultImage('chatBackground') 
-                      ? `url(${chatBackground})` 
-                      : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
-                  }}
-                >
-                  <div className="preview-overlay">
-                    <p>聊天界面背景预览</p>
+              <div className="background-preview-upload">
+                <h4>聊天背景设置</h4>
+                <div className="preview-upload-container">
+                  <div 
+                    className="background-preview-area"
+                    style={{
+                      background: chatBackground && chatBackground !== imageService.getDefaultImage('chatBackground') 
+                        ? `url(${chatBackground})` 
+                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat'
+                    }}
+                  >
+                    <div className="preview-overlay">
+                      <p>聊天界面背景预览</p>
+                    </div>
+                    
+                    {/* 悬停操作按钮 */}
+                    <div className="preview-actions">
+                      <button 
+                        className="preview-action-btn change-btn"
+                        onClick={() => {
+                          const fileInput = document.createElement('input');
+                          fileInput.type = 'file';
+                          fileInput.accept = 'image/*';
+                          fileInput.onchange = handleFileSelect;
+                          fileInput.click();
+                        }}
+                      >
+                        <Image size={16} />
+                        更换
+                      </button>
+                      
+                      {chatBackground && chatBackground !== imageService.getDefaultImage('chatBackground') && (
+                        <button 
+                          className="preview-action-btn delete-btn"
+                          onClick={() => handleBackgroundChange(null)}
+                        >
+                          <X size={16} />
+                          删除
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="upload-hint">
+                    <p>💡 点击"更换"按钮上传新背景，支持 JPG、PNG、GIF、WebP 格式</p>
+                    <p>📐 图片将自动裁剪为聊天界面的最佳比例</p>
                   </div>
                 </div>
               </div>
-              
-              <div className="background-upload">
-                <h4>上传新背景</h4>
-                <ImageUpload
-                  currentImage={chatBackground}
-                  onImageChange={handleBackgroundChange}
-                  type="background"
-                  size="large"
-                  showPreview={true}
-                />
-                
-                {chatBackground && chatBackground !== imageService.getDefaultImage('chatBackground') && (
-                  <button 
-                    className="clear-background-btn"
-                    onClick={() => handleBackgroundChange(null)}
-                  >
-                    清除背景图
-                  </button>
-                )}
-              </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 背景裁剪弹窗 */}
+      {showBackgroundCropper && backgroundImageToCrop && (
+        <div className="cropper-modal-overlay" onClick={handleBackgroundCropCancel}>
+          <div className="cropper-modal" onClick={(e) => e.stopPropagation()}>
+            <ImageCropper
+              imageSrc={backgroundImageToCrop}
+              onCrop={handleBackgroundCropComplete}
+              onCancel={handleBackgroundCropCancel}
+              aspectRatio={containerAspectRatio}
+              cropShape="rect"
+              outputWidth={800}
+              outputHeight={Math.round(800 / containerAspectRatio)}
+            />
           </div>
         </div>
       )}

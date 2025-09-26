@@ -154,9 +154,22 @@ class ImageService {
   // 从本地存储获取图片
   getImage(key) {
     try {
-      return localStorage.getItem(`image_${key}`) || this.getDefaultImage(key);
+      const imageData = localStorage.getItem(`image_${key}`);
+      if (imageData) {
+        return imageData;
+      }
+      // 对于角色头像，如果没有上传则返回null，让组件显示表情符号
+      if (key.startsWith('character_')) {
+        return null;
+      }
+      // 其他类型返回默认图片
+      return this.getDefaultImage(key);
     } catch (error) {
       console.error('获取图片失败:', error);
+      // 对于角色头像，出错时也返回null
+      if (key.startsWith('character_')) {
+        return null;
+      }
       return this.getDefaultImage(key);
     }
   }
@@ -188,8 +201,13 @@ class ImageService {
   }
 
   // 获取角色头像
-  getCharacterAvatar(characterId) {
-    return this.getImage(`character_${characterId}`);
+  getCharacterAvatar(characterId, forceImage = false) {
+    const avatar = this.getImage(`character_${characterId}`);
+    // 如果需要强制返回图片而不是表情符号
+    if (forceImage && (!avatar || typeof avatar === 'string' && avatar.length < 10)) {
+      return this.getDefaultImage('avatar');
+    }
+    return avatar;
   }
 
   // 保存角色头像

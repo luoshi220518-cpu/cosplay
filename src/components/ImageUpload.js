@@ -11,7 +11,10 @@ const ImageUpload = ({
   size = 'medium',
   showPreview = true,
   className = '',
-  enableCrop = true
+  enableCrop = true,
+  aspectRatio = null,
+  outputWidth = null,
+  outputHeight = null
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
@@ -37,8 +40,8 @@ const ImageUpload = ({
         const imageData = e.target.result;
         setOriginalImage(imageData);
         
-        if (enableCrop && type === 'avatar') {
-          // 头像需要裁剪
+        if (enableCrop && (type === 'avatar' || type === 'background')) {
+          // 头像/背景需要裁剪（背景为矩形）
           setShowCropper(true);
         } else {
           // 直接处理图片
@@ -49,6 +52,9 @@ const ImageUpload = ({
     } catch (error) {
       setError(error.message);
       setIsUploading(false);
+    } finally {
+      // 重置文件输入框的值，确保可以再次选择相同文件
+      event.target.value = '';
     }
   };
 
@@ -146,9 +152,17 @@ const ImageUpload = ({
           </div>
         ) : (
           <div className="upload-placeholder" onClick={handleClick}>
-            <div className="upload-icon">
-              {getTypeIcon()}
-            </div>
+            {type === 'avatar' ? (
+              // 头像类型显示默认头像
+              <div className="default-avatar">
+                <span style={{ fontSize: '3rem' }}>👤</span>
+              </div>
+            ) : (
+              // 其他类型显示上传图标
+              <div className="upload-icon">
+                {getTypeIcon()}
+              </div>
+            )}
             <div className="upload-text">
               {isUploading ? '上传中...' : `点击上传${type === 'avatar' ? '头像' : type === 'background' ? '背景图' : '图片'}`}
             </div>
@@ -173,8 +187,10 @@ const ImageUpload = ({
               imageSrc={originalImage}
               onCrop={handleCropComplete}
               onCancel={handleCropCancel}
-              aspectRatio={1}
-              cropShape="circle"
+              aspectRatio={aspectRatio || (type === 'background' ? 1.25 : 1)}
+              cropShape={type === 'background' ? 'rect' : 'circle'}
+              outputWidth={outputWidth || (type === 'background' ? 800 : 200)}
+              outputHeight={outputHeight || (type === 'background' ? 640 : 200)}
             />
           </div>
         </div>

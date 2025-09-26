@@ -4,56 +4,67 @@ import './ApiSettings.css';
 
 const ApiSettings = ({ isOpen, onClose, onSave }) => {
   const [settings, setSettings] = useState({
-    provider: 'openai',
-    openai: {
-      apiKey: '',
-      model: 'gpt-3.5-turbo'
-    },
-    claude: {
-      apiKey: '',
-      model: 'claude-3-sonnet-20240229'
-    },
-    zhipu: {
-      apiKey: '',
-      model: 'glm-4'
-    },
+    provider: 'qwen', // 默认选择千问
+    // Qwen API配置
     qwen: {
-      apiKey: '',
+      apiKey: 'sk-343f061be4279a7841c0f039f876092478972a73ab56a5758d171de2f5758c70',
+      baseURL: 'https://openai.qiniu.com/v1',
       model: 'qwen-turbo'
+    },
+    // Deepseek API配置
+    deepseek: {
+      apiKey: 'sk-506172768043496013ecea795c077e637146ea032e12e32938175ef6fdd14a92',
+      baseURL: 'https://openai.qiniu.com/v1',
+      model: 'deepseek-r1'
+    },
+    // Doubao API配置
+    doubao: {
+      apiKey: 'sk-1e786ad149f436ddd7b1f65698eee4e375642616344ca17be19838b6bbfca3be',
+      baseURL: 'https://openai.qiniu.com/v1',
+      model: 'doubao-1.5-thinking-pro'
     }
   });
 
   const [showKeys, setShowKeys] = useState({
-    openai: false,
-    claude: false,
-    zhipu: false,
-    qwen: false
+    qwen: false,
+    deepseek: false,
+    doubao: false
   });
 
   const providers = [
     {
-      id: 'openai',
-      name: 'OpenAI',
-      description: 'ChatGPT API，需要科学上网',
-      models: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']
-    },
-    {
-      id: 'claude',
-      name: 'Claude',
-      description: 'Anthropic的Claude API',
-      models: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229', 'claude-3-opus-20240229']
-    },
-    {
-      id: 'zhipu',
-      name: '智谱AI',
-      description: '国内大模型，无需科学上网',
-      models: ['glm-4', 'glm-3-turbo']
-    },
-    {
       id: 'qwen',
       name: '通义千问',
-      description: '阿里云大模型，国内可用',
-      models: ['qwen-turbo', 'qwen-plus', 'qwen-max']
+      description: 'Qwen3系列Turbo模型，实现思考模式和非思考模式的有效融合，可在对话中切换模式',
+      defaultModel: 'qwen-turbo',
+      models: [
+        { id: 'qwen-turbo', name: 'Qwen-Turbo (快速)' },
+        { id: 'qwen-plus', name: 'Qwen-Plus (增强)' },
+        { id: 'qwen-max', name: 'Qwen-Max (高级)' },
+        { id: 'qwen-long', name: 'Qwen-Long (长文本)' }
+      ]
+    },
+    {
+      id: 'deepseek',
+      name: 'Deepseek',
+      description: 'DeepSeek 团队发布的最新开源模型，具备非常强悍的推理性能，尤其在数学、编程和推理任务上达到了与OpenAI的o1模型相当的水平',
+      defaultModel: 'deepseek-r1',
+      models: [
+        { id: 'deepseek-r1', name: 'DeepSeek-R1 (标准)' },
+        { id: 'deepseek-coder', name: 'DeepSeek-Coder (编程)' },
+        { id: 'deepseek-math', name: 'DeepSeek-Math (数学)' }
+      ]
+    },
+    {
+      id: 'doubao',
+      name: 'Doubao',
+      description: '仅支持文本输入。在数学、编程、科学推理等专业领域及创意写作等通用任务中表现突出，在AIME 2024、Codeforces、GPQA等多项权威基准上达到或接近业界第一梯队水平',
+      defaultModel: 'doubao-1.5-thinking-pro',
+      models: [
+        { id: 'doubao-1.5-thinking-pro', name: 'Doubao-1.5-Thinking-Pro (思考)' },
+        { id: 'doubao-1.5-chat', name: 'Doubao-1.5-Chat (对话)' },
+        { id: 'doubao-1.5-lite', name: 'Doubao-1.5-Lite (轻量)' }
+      ]
     }
   ];
 
@@ -100,11 +111,22 @@ const ApiSettings = ({ isOpen, onClose, onSave }) => {
 
   const handleReset = () => {
     setSettings({
-      provider: 'openai',
-      openai: { apiKey: '', model: 'gpt-3.5-turbo' },
-      claude: { apiKey: '', model: 'claude-3-sonnet-20240229' },
-      zhipu: { apiKey: '', model: 'glm-4' },
-      qwen: { apiKey: '', model: 'qwen-turbo' }
+      provider: 'qwen',
+      qwen: { 
+        apiKey: '', 
+        baseURL: 'https://openai.qiniu.com/v1',
+        model: 'qwen-turbo' 
+      },
+      deepseek: { 
+        apiKey: '', 
+        baseURL: 'https://openai.qiniu.com/v1',
+        model: 'deepseek-r1' 
+      },
+      doubao: { 
+        apiKey: '', 
+        baseURL: 'https://openai.qiniu.com/v1',
+        model: 'doubao-1.5-thinking-pro' 
+      }
     });
   };
 
@@ -173,7 +195,9 @@ const ApiSettings = ({ isOpen, onClose, onSave }) => {
                     onChange={(e) => handleModelChange(provider.id, e.target.value)}
                   >
                     {provider.models.map(model => (
-                      <option key={model} value={model}>{model}</option>
+                      <option key={model.id} value={model.id}>
+                        {model.name}
+                      </option>
                     ))}
                   </select>
                 </div>

@@ -1,22 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Save, RotateCcw, Camera } from 'lucide-react';
 import './CharacterEditModal.css';
 import ImageUpload from './ImageUpload';
 import imageService from '../services/imageService';
 
 const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
-  const [editedCharacter, setEditedCharacter] = useState({});
+  // 不使用状态保存角色信息，直接从props获取
   const [newSkill, setNewSkill] = useState('');
-  const [characterAvatar, setCharacterAvatar] = useState(null);
-
+  
+  // 每次渲染时重新计算editedCharacter，而不是保存在状态中
+  const [editedCharacter, setEditedCharacter] = useState({});
+  
+  // 每次打开模态框时重置编辑状态
   useEffect(() => {
-    if (character) {
+    if (isOpen && character) {
+      console.log('CharacterEditModal: 弹窗打开，重置编辑状态', character.id, character.name);
       setEditedCharacter({ ...character });
-      // 加载角色头像
-      const avatar = imageService.getCharacterAvatar(character.id);
-      setCharacterAvatar(avatar);
     }
-  }, [character]);
+  }, [isOpen, character]);
+  
+  // 设置角色头像状态变量
+  const [characterAvatarState, setCharacterAvatar] = useState(null);
+  
+  // 文件输入引用
+  const fileInputRef = useRef(null);
+  
+  // 每次打开模态框时加载头像
+  useEffect(() => {
+    if (isOpen && character) {
+      const savedAvatar = imageService.getCharacterAvatar(character.id);
+      setCharacterAvatar(savedAvatar);
+    }
+  }, [isOpen, character]);
 
   const handleInputChange = (field, value) => {
     setEditedCharacter(prev => ({
@@ -47,8 +62,8 @@ const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
       onSave(editedCharacter);
     }
     // 保存角色头像
-    if (characterAvatar) {
-      imageService.saveCharacterAvatar(editedCharacter.id, characterAvatar);
+    if (characterAvatarState) {
+      imageService.saveCharacterAvatar(editedCharacter.id, characterAvatarState);
       console.log('角色头像已保存');
     }
     onClose();
@@ -59,10 +74,51 @@ const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
     const avatar = imageService.getCharacterAvatar(character.id);
     setCharacterAvatar(avatar);
   };
+  
+  const handleRemoveAvatar = () => {
+    if (character) {
+      // 删除头像并保存
+      imageService.saveCharacterAvatar(character.id, null);
+      // 清空头像状态，显示原始表情符号
+      setCharacterAvatar(null);
+      // 强制组件重新渲染以显示原始表情符号
+      setEditedCharacter({...editedCharacter});
+    }
+  };
 
   const handleAvatarChange = (imageData) => {
-    setCharacterAvatar(imageData);
-    console.log('角色头像已更新');
+    // 直接保存头像到存储，并更新状态
+    if (character && imageData) {
+      imageService.saveCharacterAvatar(character.id, imageData);
+      console.log('角色头像已更新并保存');
+      // 更新头像状态，确保UI立即更新
+      setCharacterAvatar(imageData);
+      // 强制组件重新渲染以显示新头像
+      setEditedCharacter({...editedCharacter});
+    }
+  };
+  
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    try {
+      // 验证文件
+      imageService.validateFile(file);
+      
+      // 读取文件为base64
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageData = e.target.result;
+        handleAvatarChange(imageData);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('文件上传错误:', error.message);
+    } finally {
+      // 重置文件输入框的值，确保可以再次选择相同文件
+      event.target.value = '';
+    }
   };
 
   if (!isOpen || !character) return null;
@@ -81,13 +137,46 @@ const CharacterEditModal = ({ character, isOpen, onClose, onSave }) => {
           <div className="form-section">
             <label>角色头像</label>
             <div className="avatar-upload-section">
-              <ImageUpload
-                currentImage={characterAvatar}
-                onImageChange={handleAvatarChange}
-                type="avatar"
-                size="medium"
-                className="avatar"
-              />
+              {characterAvatarState ? (
+                 <div className="character-image-avatar">
+                   <img 
+                     src={characterAvatarState} 
+                     alt={character.name}
+                     className="avatar-image" 
+                   />
+                   <div className="avatar-hover-controls">
+                     <button className="avatar-control-btn" onClick={() => fileInputRef.current.click()}>
+                       <Camera size={18} />
+                     </button>
+                     <button className="avatar-control-btn delete-btn" onClick={handleRemoveAvatar}>
+                       <X size={18} />
+                     </button>
+                   </div>
+                   <input
+                     type="file"
+                     ref={fileInputRef}
+                     style={{ display: 'none' }}
+                     onChange={handleFileSelect}
+                     accept="image/*"
+                   />
+                 </div>
+               ) : (
+                <div className="character-emoji-avatar">
+                  {character.avatar}
+                  <div className="avatar-hover-controls">
+                    <button className="avatar-control-btn" onClick={() => fileInputRef.current.click()}>
+                      <Camera size={18} />
+                    </button>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileSelect}
+                    accept="image/*"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

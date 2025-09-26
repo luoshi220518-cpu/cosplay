@@ -9,6 +9,14 @@ const UserProfile = ({ onSubmit }) => {
   const [isValid, setIsValid] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
 
+  // 加载已保存的用户头像
+  useEffect(() => {
+    const savedAvatar = imageService.getUserAvatar('current_user');
+    if (savedAvatar) {
+      setUserAvatar(savedAvatar);
+    }
+  }, []);
+
   const handleInputChange = (e) => {
     const name = e.target.value.trim();
     setUserName(name);

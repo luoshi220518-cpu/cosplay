@@ -7,6 +7,9 @@ const ImageCropper = ({
   onCrop,
   onCancel,
   cropShape = "circle", // circle / rect
+  aspectRatio = 1, // 仅在 rect 下生效，width / height
+  outputWidth = 200, // 输出宽度（rect 使用）
+  outputHeight = 200, // 输出高度（rect 使用）
 }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -72,9 +75,13 @@ const ImageCropper = ({
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
-    const cropSize = 200; // 输出头像尺寸
-    canvas.width = cropSize;
-    canvas.height = cropSize;
+    // 计算输出尺寸
+    const isCircle = cropShape === "circle";
+    const cropSize = 200;
+    const targetWidth = isCircle ? cropSize : outputWidth;
+    const targetHeight = isCircle ? cropSize : outputHeight;
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
 
     const container = containerRef.current;
     const containerRect = container.getBoundingClientRect();
@@ -85,7 +92,27 @@ const ImageCropper = ({
     const scaledHeight = displaySize.height * zoomValue;
 
     // 裁剪框大小（相对于容器，80%）
-    const frameSize = Math.min(containerWidth, containerHeight) * 0.8;
+    let frameWidth;
+    let frameHeight;
+    if (isCircle) {
+      const size = Math.min(containerWidth, containerHeight) * 0.8;
+      frameWidth = size;
+      frameHeight = size;
+    } else {
+      // 矩形裁剪：根据期望的宽高比自适应容器
+      const maxWidth = containerWidth * 0.8;
+      const maxHeight = containerHeight * 0.8;
+      const containerAspect = maxWidth / maxHeight;
+      if (containerAspect > aspectRatio) {
+        // 容器较宽，以高度为基准
+        frameHeight = maxHeight;
+        frameWidth = frameHeight * aspectRatio;
+      } else {
+        // 容器较高，以宽度为基准
+        frameWidth = maxWidth;
+        frameHeight = frameWidth / aspectRatio;
+      }
+    }
 
     // 图片中心点对齐容器中心
     const offsetX = containerWidth / 2 - scaledWidth / 2 + cropPosition.x;
@@ -95,16 +122,16 @@ const ImageCropper = ({
     const scaleY = imageSize.height / scaledHeight;
 
     // 计算源图截取区域
-    const sourceX = (containerWidth - frameSize) / 2 - offsetX;
-    const sourceY = (containerHeight - frameSize) / 2 - offsetY;
-    const sourceWidth = frameSize;
-    const sourceHeight = frameSize;
+    const sourceX = (containerWidth - frameWidth) / 2 - offsetX;
+    const sourceY = (containerHeight - frameHeight) / 2 - offsetY;
+    const sourceWidth = frameWidth;
+    const sourceHeight = frameHeight;
 
     ctx.save();
 
-    if (cropShape === "circle") {
+    if (isCircle) {
       ctx.beginPath();
-      ctx.arc(cropSize / 2, cropSize / 2, cropSize / 2, 0, 2 * Math.PI);
+      ctx.arc(targetWidth / 2, targetHeight / 2, Math.min(targetWidth, targetHeight) / 2, 0, 2 * Math.PI);
       ctx.clip();
     }
 
@@ -116,8 +143,8 @@ const ImageCropper = ({
       sourceHeight * scaleY,
       0,
       0,
-      cropSize,
-      cropSize
+      targetWidth,
+      targetHeight
     );
 
     ctx.restore();

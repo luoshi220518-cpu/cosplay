@@ -172,41 +172,22 @@ class AIService {
 
   // 备用回复（当API调用失败时）
   getFallbackResponse(character, userMessage) {
-    const fallbackResponses = {
-      '哈利·波特': [
-        '这让我想起了在霍格沃茨的时光...',
-        '你知道吗，我在一年级时就学会了魁地奇！',
-        '友谊和勇气是最重要的魔法。',
-        '有时候，我们需要相信自己的直觉。'
-      ],
-      '苏格拉底': [
-        '让我问你一个问题：什么是真正的智慧？',
-        '无知之知，这是智慧的开始。',
-        '通过对话，我们可以发现真理。',
-        '你认为什么是正义？'
-      ],
-      '夏洛克·福尔摩斯': [
-        '从你的话语中，我观察到了一些有趣的细节...',
-        '让我运用演绎法来分析这个问题。',
-        '数据！数据！数据！没有数据就无法推理。',
-        '排除所有不可能的情况，剩下的就是真相。'
-      ],
-      '达芬奇': [
-        '这让我想到了一个新的发明想法...',
-        '艺术和科学是相通的，都需要观察和创造。',
-        '好奇心是知识的源泉。',
-        '让我画个图来解释这个概念。'
-      ]
-    };
-
-    const responses = fallbackResponses[character.name] || ['这是一个很有趣的话题。'];
-    return responses[Math.floor(Math.random() * responses.length)];
+    return `抱歉，${character.name}暂时无法回应，请稍后再试。`;
   }
 
-  // 设置API提供商
-  setProvider(provider) {
+  // 设置API提供商和配置
+  setProvider(provider, config) {
     if (['qwen', 'deepseek', 'doubao'].includes(provider)) {
       this.currentProvider = provider;
+      
+      // 如果提供了配置，更新配置
+      if (config) {
+        // 更新当前提供商的配置
+        this.config[provider] = {
+          ...this.config[provider],
+          ...config
+        };
+      }
     } else {
       throw new Error('不支持的API提供商');
     }
